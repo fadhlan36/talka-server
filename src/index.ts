@@ -7,7 +7,7 @@ import { Server } from 'socket.io';
 import authRoutes from './routes/authRoutes';
 import threadRoutes from './routes/threadRoutes';
 import replyRoutes from './routes/replyRoute';
-// import followRoutes from './routes/followRoutes'
+import followRoutes from './routes/followRoutes'
 
 dotenv.config();
 const app = express();
@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/thread', threadRoutes);
 app.use('/api/v1/reply', replyRoutes);
-// app.use("/api/v1/follows", followRoutes);
+app.use("/api/v1/follows", followRoutes);
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
