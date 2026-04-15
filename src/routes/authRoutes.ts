@@ -1,13 +1,13 @@
 import { Router } from 'express';
-// 1. Tambahkan googleLogin di import
-import { register, login, googleLogin } from '../controllers/authController';
+import { register, login, googleLogin, editProfile } from '../controllers/authController';
+import { authenticate } from '../middlewares/authMiddleware'; // middleware cek token
+import { upload } from '../middlewares/uploadMiddleware'; // middleware upload foto
 
 const router = Router();
 
 router.post('/register', register);
 router.post('/login', login);
-
-// 2. Tambahkan route baru untuk Google Login
 router.post('/google-login', googleLogin);
+router.put('/edit-profile', authenticate, upload.single('photo_profile'), editProfile);
 
 export default router;
