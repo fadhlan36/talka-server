@@ -91,16 +91,58 @@ export const getThreadById = async (req: AuthRequest, res: Response) => {
     }
 };
 
+// GET THREADS BY USER ID UNTUK DI PROFILE
+export const getThreadsByUser = async (req: AuthRequest, res: Response) => {
+    try {
+        const { userId } = req.params;
+        const loggedInUserId = req.user?.userId;
+
+        const threads = await prisma.thread.findMany({
+            where: { created_by: Number(userId) },
+            orderBy: { created_at: 'desc' },
+            include: {
+                user: {
+                    select: { username: true, full_name: true, photo_profile: true }
+                },
+                _count: {
+                    select: { likes: true, replies: true }
+                },
+                likes: {
+                    where: { user_id: loggedInUserId },
+                    select: { id: true }
+                }
+            }
+        });
+
+        const result = threads.map((t) => ({
+            id: t.id,
+            content: t.content,
+            image: t.image,
+            avatar: t.user.photo_profile,
+            username: t.user.username,
+            name: t.user.full_name,
+            likes: t._count.likes,
+            replies: t._count.replies,
+            isLiked: t.likes.length > 0,
+        }));
+
+        return res.status(200).json(result);
+    } catch (error) {
+        return res.status(500).json({ error: "Gagal memuat threads user" });
+    }
+};
+
 // CREATE THREAD (Queue)
 export const createThread = async (req: AuthRequest, res: Response) => {
     try {
+        //  AMBIL DATA DARI REQUEST
         const { content } = req.body;
         const userId = req.user?.userId;
         const file = req.file;
 
-        if (!content) return res.status(400).json({ error: "Konten kosong" });
+        if (!content) return res.status(400).json({ error: "Konten kosong" }); // validasi kalau konten kosong
 
-        await threadQueue.add('new-thread-job', {
+        await threadQueue.add('new-thread-job', { // membuat worker standby
             content,
             image: file ? file.filename : null,
             userId: userId as number, // Ini akan diproses worker menggunakan created_by

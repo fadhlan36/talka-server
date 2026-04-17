@@ -1,11 +1,14 @@
 import { Router } from 'express';
-import { getThreads, createThread, toggleLike, getThreadById } from '../controllers/threadController';
+import { getThreads, createThread, toggleLike, getThreadById, getThreadsByUser } from '../controllers/threadController'; // ← tambah getThreadsByUser
 import { authenticate } from '../middlewares/authMiddleware';
 import { upload } from '../middlewares/uploadMiddleware';
 
 const router = Router();
+
 router.get('/', authenticate, getThreads);
 router.post('/', authenticate, upload.single('image'), createThread);
 router.post('/like', authenticate, toggleLike);
-router.get('/:id', authenticate, getThreadById); // Checkpoint Detail
+router.get('/user/:userId', authenticate, getThreadsByUser); 
+router.get('/:id', authenticate, getThreadById);
+
 export default router;
