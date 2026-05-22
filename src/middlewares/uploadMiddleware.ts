@@ -2,34 +2,62 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Buat folder uploads jika belum ada
-const uploadDir = 'uploads/';
+// lokasi folder upload
+const uploadDir = path.join(
+    process.cwd(),
+    'dist',
+    'src',
+    'public'
+);
+
+// buat folder jika belum ada
 if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
+    fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, uploadDir);
     },
+
     filename: (req, file, cb) => {
-        // Nama file unik: 1712654321-782.jpg
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+        const uniqueSuffix =
+            Date.now() +
+            '-' +
+            Math.round(Math.random() * 1e9);
+
+        cb(
+            null,
+            uniqueSuffix +
+            path.extname(file.originalname)
+        );
     }
 });
 
-// Filter hanya gambar
-const fileFilter = (req: any, file: any, cb: any) => {
+// filter hanya gambar
+const fileFilter = (
+    req: any,
+    file: any,
+    cb: any
+) => {
+
     if (file.mimetype.startsWith('image/')) {
         cb(null, true);
     } else {
-        cb(new Error('Hanya file gambar yang diperbolehkan!'), false);
+        cb(
+            new Error(
+                'Hanya file gambar!'
+            ),
+            false
+        );
     }
+
 };
 
 export const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 } // Batasi 5MB
+    storage,
+    fileFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024
+    }
 });

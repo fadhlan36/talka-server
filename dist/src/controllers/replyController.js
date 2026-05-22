@@ -1,9 +1,12 @@
-import { Response } from 'express';
-import prisma from '../config/prisma';
-import { AuthRequest } from '../middlewares/authMiddleware';
-import { Queue } from 'bullmq';
-import connection from "../config/redis";
-
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createReply = exports.getReplies = void 0;
+const prisma_1 = __importDefault(require("../config/prisma"));
+const bullmq_1 = require("bullmq");
+const redis_1 = __importDefault(require("../config/redis"));
 // Inisialisasi Antrean (Queue) untuk Reply
 // const replyQueue = new Queue('reply-queue', {
 //     connection: {
@@ -11,19 +14,16 @@ import connection from "../config/redis";
 //         port: Number(process.env.REDIS_PORT) || 6379
 //     }
 // });
-
-const replyQueue = new Queue("reply-queue", {
-    connection
+const replyQueue = new bullmq_1.Queue("reply-queue", {
+    connection: redis_1.default
 });
-
 // GET ALL REPLIES (Tetap langsung ke DB karena ini operasi Read)
-export const getReplies = async (req: AuthRequest, res: Response) => {
+const getReplies = async (req, res) => {
     try {
         const { thread_id } = req.query;
-
-        if (!thread_id) return res.status(400).json({ error: "thread_id dibutuhkan" });
-
-        const replies = await prisma.reply.findMany({
+        if (!thread_id)
+            return res.status(400).json({ error: "thread_id dibutuhkan" });
+        const replies = await prisma_1.default.reply.findMany({
             where: { thread_id: Number(thread_id) },
             include: {
                 user: {
@@ -32,7 +32,6 @@ export const getReplies = async (req: AuthRequest, res: Response) => {
             },
             orderBy: { created_at: 'asc' }
         });
-
         const result = replies.map((r) => ({
             id: r.id,
             content: r.content,
@@ -42,26 +41,24 @@ export const getReplies = async (req: AuthRequest, res: Response) => {
             avatar: r.user.photo_profile,
             created_at: r.created_at
         }));
-
         return res.status(200).json(result);
-    } catch (error) {
+    }
+    catch (error) {
         return res.status(500).json({ error: "Gagal memuat balasan" });
     }
 };
-
+exports.getReplies = getReplies;
 // CREATE REPLY (Sekarang menggunakan Queue & Worker)
-export const createReply = async (req: AuthRequest, res: Response) => {
+const createReply = async (req, res) => {
     try {
         const { content, thread_id } = req.body;
-        const userId = req.user?.userId!;
-
+        const userId = req.user?.userId;
         if (!content || !thread_id) {
             return res.status(400).json({ error: "Konten dan thread_id wajib diisi" });
         }
-
         // Kirim data ke Antrean (Redis)
         // Data ini akan ditangkap oleh replyWorker.ts
-        const newReply = await prisma.reply.create({
+        const newReply = await prisma_1.default.reply.create({
             data: {
                 content,
                 thread_id: thread_id,
@@ -78,14 +75,15 @@ export const createReply = async (req: AuthRequest, res: Response) => {
                 },
             },
         });
-
         // Berikan respon cepat ke Frontend (Status 202 = Accepted)
         return res.status(202).json({
             message: "Balasan sedang diproses dalam antrean",
             status: "processing"
         });
-    } catch (error) {
+    }
+    catch (error) {
         console.error("Queue Error:", error);
         return res.status(500).json({ error: "Gagal memproses antrean balasan" });
     }
 };
+exports.createReply = createReply;

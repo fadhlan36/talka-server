@@ -1,20 +1,21 @@
-import { Response } from 'express';
-import prisma from '../config/prisma';
-import { AuthRequest } from '../middlewares/authMiddleware';
-import { Queue } from 'bullmq';
-import connection from "../config/redis";
-
-const threadQueue = new Queue("thread-queue", {
-    connection
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.toggleLike = exports.createThread = exports.getThreadsByUser = exports.getThreadById = exports.getThreads = void 0;
+const prisma_1 = __importDefault(require("../config/prisma"));
+const bullmq_1 = require("bullmq");
+const redis_1 = __importDefault(require("../config/redis"));
+const threadQueue = new bullmq_1.Queue("thread-queue", {
+    connection: redis_1.default
 });
-
 // GET ALL THREADS
-export const getThreads = async (req: AuthRequest, res: Response) => {
+const getThreads = async (req, res) => {
     try {
         const loggedInUserId = req.user?.userId;
-        const limit = parseInt(req.query.limit as string) || 25;
-
-        const threads = await prisma.thread.findMany({
+        const limit = parseInt(req.query.limit) || 25;
+        const threads = await prisma_1.default.thread.findMany({
             take: limit,
             orderBy: { created_at: 'desc' },
             include: {
@@ -30,7 +31,6 @@ export const getThreads = async (req: AuthRequest, res: Response) => {
                 }
             },
         });
-
         const result = threads.map((t) => ({
             id: t.id,
             content: t.content,
@@ -42,20 +42,19 @@ export const getThreads = async (req: AuthRequest, res: Response) => {
             replies: t._count.replies,
             isLiked: t.likes.length > 0,
         }));
-
         return res.status(200).json(result);
-    } catch (error) {
+    }
+    catch (error) {
         return res.status(500).json({ error: "Gagal memuat threads" });
     }
 };
-
+exports.getThreads = getThreads;
 // GET THREAD DETAIL BY ID (Disesuaikan dengan Schema created_by)
-export const getThreadById = async (req: AuthRequest, res: Response) => {
+const getThreadById = async (req, res) => {
     try {
         const { id } = req.params;
         const loggedInUserId = req.user?.userId;
-
-        const thread = await prisma.thread.findUnique({
+        const thread = await prisma_1.default.thread.findUnique({
             where: { id: Number(id) },
             include: {
                 user: {
@@ -70,9 +69,8 @@ export const getThreadById = async (req: AuthRequest, res: Response) => {
                 }
             },
         });
-
-        if (!thread) return res.status(404).json({ error: "Postingan tidak ditemukan" });
-
+        if (!thread)
+            return res.status(404).json({ error: "Postingan tidak ditemukan" });
         return res.status(200).json({
             id: thread.id,
             content: thread.content,
@@ -84,18 +82,18 @@ export const getThreadById = async (req: AuthRequest, res: Response) => {
             replies: thread._count.replies,
             isLiked: thread.likes.length > 0,
         });
-    } catch (error) {
+    }
+    catch (error) {
         return res.status(500).json({ error: "Gagal memuat detail" });
     }
 };
-
+exports.getThreadById = getThreadById;
 // GET THREADS BY USER ID UNTUK DI PROFILE
-export const getThreadsByUser = async (req: AuthRequest, res: Response) => {
+const getThreadsByUser = async (req, res) => {
     try {
         const { userId } = req.params;
         const loggedInUserId = req.user?.userId;
-
-        const threads = await prisma.thread.findMany({
+        const threads = await prisma_1.default.thread.findMany({
             where: { created_by: Number(userId) },
             orderBy: { created_at: 'desc' },
             include: {
@@ -111,7 +109,6 @@ export const getThreadsByUser = async (req: AuthRequest, res: Response) => {
                 }
             }
         });
-
         const result = threads.map((t) => ({
             id: t.id,
             content: t.content,
@@ -123,29 +120,28 @@ export const getThreadsByUser = async (req: AuthRequest, res: Response) => {
             replies: t._count.replies,
             isLiked: t.likes.length > 0,
         }));
-
         return res.status(200).json(result);
-    } catch (error) {
+    }
+    catch (error) {
         return res.status(500).json({ error: "Gagal memuat threads user" });
     }
 };
-
+exports.getThreadsByUser = getThreadsByUser;
 // CREATE THREAD (Queue)
-export const createThread = async (req: AuthRequest, res: Response) => {
+const createThread = async (req, res) => {
     try {
         //  AMBIL DATA DARI REQUEST
         const { content } = req.body;
-        const userId = req.user?.userId!;
+        const userId = req.user?.userId;
         const file = req.file;
-
-        if (!content) return res.status(400).json({ error: "Konten kosong" }); // validasi kalau konten kosong
-
+        if (!content)
+            return res.status(400).json({ error: "Konten kosong" }); // validasi kalau konten kosong
         // await threadQueue.add('new-thread-job', { // membuat worker standby
         //     content,
         //     image: file ? file.filename : null,
         //     userId: userId as number, // Ini akan diproses worker menggunakan created_by
         // });
-        const newThread = await prisma.thread.create({
+        const newThread = await prisma_1.default.thread.create({
             data: {
                 content,
                 image: file
@@ -163,37 +159,38 @@ export const createThread = async (req: AuthRequest, res: Response) => {
                 }
             }
         });
-
         return res.status(202).json({ message: "Postingan sedang diproses!" });
-    } catch (error) {
+    }
+    catch (error) {
         return res.status(500).json({ error: "Gagal" });
     }
 };
-
+exports.createThread = createThread;
 // TOGGLE LIKE
-export const toggleLike = async (req: AuthRequest, res: Response) => {
+const toggleLike = async (req, res) => {
     try {
         const { threadId } = req.body;
         const userId = req.user?.userId;
-
-        const existingLike = await prisma.like.findFirst({
+        const existingLike = await prisma_1.default.like.findFirst({
             where: { user_id: userId, thread_id: Number(threadId) }
         });
-
         if (existingLike) {
-            await prisma.like.delete({ where: { id: existingLike.id } });
+            await prisma_1.default.like.delete({ where: { id: existingLike.id } });
             return res.status(200).json({ isLiked: false });
-        } else {
-            await prisma.like.create({
+        }
+        else {
+            await prisma_1.default.like.create({
                 data: {
-                    user_id: userId as number,
+                    user_id: userId,
                     thread_id: Number(threadId),
                     created_by: userId
                 }
             });
             return res.status(201).json({ isLiked: true });
         }
-    } catch (error) {
+    }
+    catch (error) {
         return res.status(500).json({ error: "Gagal" });
     }
 };
+exports.toggleLike = toggleLike;
