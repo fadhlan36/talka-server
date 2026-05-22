@@ -2,13 +2,18 @@ import { Response } from 'express';
 import prisma from '../config/prisma';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import { Queue } from 'bullmq';
+import connection from "../config/redis";
 
 // Inisialisasi Antrean (Queue) untuk Reply
-const replyQueue = new Queue('reply-queue', {
-    connection: {
-        host: process.env.REDIS_HOST || '127.0.0.1',
-        port: Number(process.env.REDIS_PORT) || 6379
-    }
+// const replyQueue = new Queue('reply-queue', {
+//     connection: {
+//         host: process.env.REDIS_HOST || '127.0.0.1',
+//         port: Number(process.env.REDIS_PORT) || 6379
+//     }
+// });
+
+const replyQueue = new Queue("reply-queue", {
+    connection
 });
 
 // GET ALL REPLIES (Tetap langsung ke DB karena ini operasi Read)

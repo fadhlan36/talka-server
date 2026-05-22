@@ -2,12 +2,10 @@ import { Response } from 'express';
 import prisma from '../config/prisma';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import { Queue } from 'bullmq';
+import connection from "../config/redis";
 
-const threadQueue = new Queue('thread-queue', {
-    connection: {
-        host: process.env.REDIS_HOST || '127.0.0.1',
-        port: Number(process.env.REDIS_PORT) || 6379
-    }
+const threadQueue = new Queue("thread-queue", {
+    connection
 });
 
 // GET ALL THREADS

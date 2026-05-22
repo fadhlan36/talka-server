@@ -1,6 +1,7 @@
 import { Worker } from 'bullmq';
 import prisma from '../config/prisma';
 import { io } from '../index'; // Pastikan export io ada di file index.ts utama
+import connection from '../config/redis';
 
 const replyWorker = new Worker(
     'reply-queue', // Nama queue harus SAMA dengan yang ada di Controller
@@ -46,12 +47,7 @@ const replyWorker = new Worker(
             throw error; // Lempar error agar BullMQ bisa mencoba ulang (retry) jika dikonfigurasi
         }
     },
-    {
-        connection: {
-            host: process.env.REDIS_HOST || '127.0.0.1',
-            port: Number(process.env.REDIS_PORT) || 6379,
-        },
-    }
+    {connection}
 );
 
 export default replyWorker;

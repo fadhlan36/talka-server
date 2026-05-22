@@ -10,6 +10,8 @@ import replyRoutes from './routes/replyRoute';
 import followRoutes from './routes/followRoutes';
 import userRoutes from './routes/userRoutes';
 import searchRoutes from './routes/searchRoutes'; 
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './docs/swagger';
 
 dotenv.config();
 const app = express();
@@ -22,6 +24,7 @@ export const io = new Server(httpServer, {
 import './workers/threadWorker';
 import './workers/replyWorker';
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

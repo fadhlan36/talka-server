@@ -1,6 +1,7 @@
 import { Worker } from 'bullmq';
 import prisma from '../config/prisma';
 import { io } from '../index';
+import connection from "../config/redis";
 
 const worker = new Worker('thread-queue', async (job) => { // worker standby (data baru => langsung proses) 
     const { content, image, userId } = job.data; // ambil data di queue/antrian
@@ -36,11 +37,6 @@ const worker = new Worker('thread-queue', async (job) => { // worker standby (da
         isLiked: false
     });
 
-}, {
-    connection: {
-        host: process.env.REDIS_HOST || '127.0.0.1',
-        port: Number(process.env.REDIS_PORT) || 6379
-    }
-});
+}, {connection});
 
 export default worker;
