@@ -1,0 +1,30 @@
+
+/src/generated/prisma
+# Dependencies
+node_modules/
+
+# Build
+dist/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel
+
+# IDE
+.vscode/
+
+# Tesing
+/coverage
+
+# logs
+logs/
+
+
+bun.lock
+catatan.txt
+/src/generated/prisma
+/generated/prisma

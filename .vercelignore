@@ -1,0 +1,36 @@
+
+# Dependencies (Vercel installs these)
+node_modules/
+
+# Environment files (set in Vercel Dashboard)
+.env
+.env.local
+.env.*.local
+
+# Build output (Vercel builds fresh)
+dist/
+build/
+.next/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Git
+.git/
+
+# Testing
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel/
