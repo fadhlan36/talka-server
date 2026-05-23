@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import  'dotenv/config';
 import path from 'path';
 
 import authRoutes from './routes/authRoutes';
@@ -13,12 +13,18 @@ import searchRoutes from './routes/searchRoutes';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './docs/swagger';
 
-dotenv.config();
+// dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:5173"
+}));
 app.use(express.json());
+
+app.get('/ping', (req, res) => {
+    res.json({ ok: true });
+});
 
 app.use(
     '/public',
@@ -49,8 +55,8 @@ const PORT = process.env.PORT || 5000;
 
 export default app;
 
-app.listen(PORT, () => {
-    console.log(
-        `🚀 Server running on http://localhost:${PORT}`
-    );
-});
+// app.listen(PORT, () => {
+//     console.log(
+//         `🚀 Server running on http://localhost:${PORT}`
+//     );
+// });

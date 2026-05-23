@@ -1,12 +1,12 @@
 import { Response } from 'express';
 import prisma from '../config/prisma';
 import { AuthRequest } from '../middlewares/authMiddleware';
-import { Queue } from 'bullmq';
-import connection from "../config/redis";
+// import { Queue } from 'bullmq';
+// import connection from "../config/redis";
 
-const threadQueue = new Queue("thread-queue", {
-    connection
-});
+// const threadQueue = new Queue("thread-queue", {
+//     connection
+// });
 
 // GET ALL THREADS
 export const getThreads = async (req: AuthRequest, res: Response) => {

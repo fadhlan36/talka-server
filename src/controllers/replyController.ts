@@ -1,8 +1,8 @@
 import { Response } from 'express';
 import prisma from '../config/prisma';
 import { AuthRequest } from '../middlewares/authMiddleware';
-import { Queue } from 'bullmq';
-import connection from "../config/redis";
+// import { Queue } from 'bullmq';
+// import connection from "../config/redis";
 
 // Inisialisasi Antrean (Queue) untuk Reply
 // const replyQueue = new Queue('reply-queue', {
@@ -12,9 +12,9 @@ import connection from "../config/redis";
 //     }
 // });
 
-const replyQueue = new Queue("reply-queue", {
-    connection
-});
+// const replyQueue = new Queue("reply-queue", {
+//     connection
+// });
 
 // GET ALL REPLIES (Tetap langsung ke DB karena ini operasi Read)
 export const getReplies = async (req: AuthRequest, res: Response) => {
